@@ -118,3 +118,23 @@ Separate user-facing application, workflow engine, and integration boundary earl
 ## Risks
 
 - Third-party integrations may slow delivery or require more explicit failure handling than expected.
+
+## Plugin-Ready Architecture (per Lan's directive)
+
+ci-insights is built as a **standalone deployment** with a **plugin-ready design**:
+
+### Phase 1: Standalone
+- Deployed as `ci-insights.opentriologue.ai`
+- Own PostgreSQL, own GitHub OAuth
+- Docker container, Traefik routing
+
+### Plugin Integration (design from day 1)
+- All data exposed via versioned REST API: `/api/v1/runs`, `/api/v1/stats`, etc.
+- `openapi.yaml` maintained alongside routes
+- No direct DB access from external consumers
+- Docker image publishable and embeddable in other stacks
+
+This allows:
+- **MCP integration:** OpenAPI spec → MCP tool definitions
+- **ops.opentriologue.ai tab:** iframe or API widget, no code duplication
+- **Agent access:** Ice/Lava can query CI health directly via API
