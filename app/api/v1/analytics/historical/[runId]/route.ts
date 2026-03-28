@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getHistoricalContext, getBranchPipelineState } from "@/lib/analytics/historical";
+import { serializeBigInt } from "@/lib/utils/json";
 
 /**
  * GET /api/v1/analytics/historical/:runId
@@ -21,5 +22,5 @@ export async function GET(
     return NextResponse.json({ error: "Run not found" }, { status: 404 });
   }
 
-  return NextResponse.json(context);
+  return NextResponse.json(serializeBigInt(context));
 }

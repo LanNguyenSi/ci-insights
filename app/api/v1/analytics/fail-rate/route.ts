@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllFailRates, getWorkflowFailRates, type Period } from "@/lib/analytics/fail-rate";
+import { getAllFailRates, getWorkflowFailRates } from "@/lib/analytics/fail-rate";
+import { parsePeriod, serverError } from "@/lib/utils/validation";
 
 /**
  * GET /api/v1/analytics/fail-rate
@@ -12,11 +13,9 @@ export async function GET(request: NextRequest) {
   const repo = searchParams.get("repo");
   const periodParam = searchParams.get("period");
 
-  const period = (
-    periodParam && ["1", "7", "30"].includes(periodParam)
-      ? parseInt(periodParam)
-      : 30
-  ) as Period;
+  const periodResult = parsePeriod(periodParam);
+  if ("error" in periodResult) return periodResult.error;
+  const { period } = periodResult;
 
   try {
     const data = repo
@@ -25,9 +24,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ period, data });
   } catch (err: unknown) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Query failed" },
-      { status: 500 }
-    );
+    return serverError(err);
   }
 }
