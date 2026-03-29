@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ci-insights
 
-## Getting Started
+CI/CD Intelligence Dashboard — tracks GitHub Actions workflow history and provides analytics for pipeline health, bottleneck detection, and flaky job identification.
 
-First, run the development server:
+## Tech Stack
+
+- **Next.js 16** (App Router) + React 19 + TypeScript
+- **PostgreSQL 16** via Prisma ORM
+- **Octokit** for GitHub Actions API integration
+- **Tailwind CSS 4** for styling
+- **Vitest** for testing
+
+## Prerequisites
+
+- Node.js 22+
+- Docker (for PostgreSQL)
+- GitHub Personal Access Token (for syncing CI data)
+
+## Quick Start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Create .env with your GitHub token
+echo 'DATABASE_URL="postgresql://postgres:password@localhost:5432/ci_insights"' > .env
+echo 'GITHUB_TOKEN="ghp_your_token_here"' >> .env
+
+# Start everything (DB + deps + migrations + dev server)
+make dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Available Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Description |
+|---------|-------------|
+| `make dev` | Full local setup: DB + deps + migrate + dev server |
+| `make dev-down` | Stop all services |
+| `make db` | Start only PostgreSQL |
+| `make db-reset` | Drop and recreate database |
+| `make test` | Run tests |
+| `make test-watch` | Run tests in watch mode |
+| `make lint` | ESLint |
+| `make typecheck` | TypeScript type check |
+| `make build` | Production build |
+| `make clean` | Remove build artifacts and node_modules |
+| `make help` | Show all commands |
 
-## Learn More
+## API Endpoints
 
-To learn more about Next.js, take a look at the following resources:
+All endpoints under `/api/v1/`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**System**
+- `GET /health` — Health check
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Repos & Sync**
+- `GET /repos` — List tracked repos
+- `POST /repos/:owner/:repo/sync` — Sync a single repo
+- `POST /sync` — Trigger sync for all repos
+- `GET /sync` — Sync status
 
-## Deploy on Vercel
+**Analytics**
+- `GET /analytics/fail-rate` — Workflow/job failure rates
+- `GET /analytics/build-times` — P50/P95 build times per job/branch
+- `GET /analytics/flaky` — Flaky job detection (SHA-retry + high-fail-rate)
+- `GET /analytics/bottleneck` — Longest-running jobs
+- `GET /analytics/overview` — Cross-repo aggregated view
+- `GET /analytics/historical/:runId` — Historical context for a run
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/api/v1/         API routes (health, repos, sync, analytics)
+lib/
+  github/           Octokit client + GitHub API wrappers
+  ingestion/        Idempotent repo/workflow/run ingestion
+  sync/             Sync scheduler (3-concurrent limit)
+  analytics/        Fail-rate, build-times, flaky, bottleneck, historical, cross-repo
+  utils/            Validation, JSON helpers
+prisma/             Schema + migrations
+tests/              Unit, integration, edge-case tests
+```
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `GITHUB_TOKEN` | Yes | GitHub PAT for API access |
