@@ -86,3 +86,11 @@ tests/              Unit, integration, edge-case tests
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `GITHUB_TOKEN` | Yes | GitHub PAT for API access |
+
+## Integration with depsight
+
+ci-insights powers the **CI Health tab** in **[depsight](https://github.com/LanNguyenSi/depsight)** — a security dashboard for CVE, license, and dependency health.
+
+Once ci-insights is running and repos are synced, depsight automatically surfaces the CI Health tab for those repositories.
+
+> See [depsight](https://github.com/LanNguyenSi/depsight) for setup instructions.
